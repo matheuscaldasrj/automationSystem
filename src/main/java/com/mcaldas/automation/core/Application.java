@@ -1,4 +1,4 @@
-package com.mcaldas.automation;
+package com.mcaldas.automation.core;
 
 
 import org.springframework.boot.SpringApplication;
@@ -8,7 +8,7 @@ import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.PropertySource;
 
 
-@PropertySource("file:./../config/application.properties")
+@PropertySource("file:./config/application.properties")
 @SpringBootApplication
 public class Application extends SpringBootServletInitializer {
 

@@ -48,7 +48,7 @@ public class AutomationRest {
 		if (!id.equals("1") && !id.equals("2") && !id.equals("3")) {
 			System.out.println("Id inválido");
 			throw new CommandInvalidException(
-					"Received light id=" + id + " but the only availables values for light are 1,2 and 3");
+					"Received light id=" + id + " but the availables values for light are 1,2 and 3");
 		}
 
 		if (value.equals("on")) {
@@ -57,7 +57,7 @@ public class AutomationRest {
 			valueToNode = "0";
 		} else {
 			throw new CommandInvalidException(
-					"Received value for light=" + value + " but the only availables values for light are on/off");
+					"Received value for light=" + value + " but the availables values for light are on/off");
 		}
 
 		System.out.println("Translating lightNumber: " + id + " with value: '" + value + "' to pin: "

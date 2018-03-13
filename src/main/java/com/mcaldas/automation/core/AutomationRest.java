@@ -45,11 +45,6 @@ public class AutomationRest {
 			throws Exception {
 
 		String valueToNode = null;
-		if (!id.equals("1") && !id.equals("2") && !id.equals("3")) {
-			System.out.println("Id inválido");
-			throw new CommandInvalidException(
-					"Received light id=" + id + " but the availables values for light are 1,2 and 3");
-		}
 
 		if (value.equals("on")) {
 			valueToNode = "1";
@@ -70,7 +65,7 @@ public class AutomationRest {
 	}
 	
 	@RequestMapping(method = RequestMethod.POST, value = "/allLights")
-	public String changeLight(@RequestParam(value = "value") String value)
+	public String changeAllLights(@RequestParam(value = "value") String value)
 			throws Exception {
 
 		String valueToNode = null;
@@ -96,8 +91,20 @@ public class AutomationRest {
 		return "Comando enviado: " + value + " para todas as luzes";
 	}
 	
+	
+	@RequestMapping(method = RequestMethod.POST, value = "/door")
+	public String changeDoorState(@RequestParam(value = "id") String id)
+			throws Exception {
 
-	public String makeGetRequest(String url) throws ClientProtocolException, IOException {
+
+		String url = this.automationProperties.getNodePath() + "/changeServo/" + this.automationProperties.getDoorPin(id);
+
+		return this.makePostRequest(url);
+
+	}
+	
+
+	private String makeGetRequest(String url) throws ClientProtocolException, IOException {
 		HttpClient client = HttpClientBuilder.create().build();
 		HttpGet request = new HttpGet(url);
 		HttpResponse response = client.execute(request);

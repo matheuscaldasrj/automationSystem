@@ -23,6 +23,7 @@ public class AutomationProperties {
 	private String light2;
 	private String light3;
 	private String door1;
+	private String serverKey;
 	
 	
 	public String getConfigLightMapping() {
@@ -81,6 +82,14 @@ public class AutomationProperties {
 		throw new CommandInvalidException(
 				"Received doorNumber '" + doorNumber + "' but the availables values for light are 1");
 	}
+	
+	public String getServerKey() {
+		return serverKey;
+	}
+	public void setServerKey(String serverKey) {
+		this.serverKey = serverKey;
+	}
+
 	
 	
 	

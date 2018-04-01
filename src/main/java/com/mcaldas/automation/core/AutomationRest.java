@@ -6,14 +6,21 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -27,6 +34,8 @@ import com.mcaldas.automation.exceptions.CommandInvalidException;
 public class AutomationRest {
 
 	private AutomationProperties automationProperties;
+	private String userToken = "dbk-9Ziem54:APA91bH6hIRX7LLElg3lyHOYp7NVRXDUnkSxYibsOm0W37PW7TEJ_0W1DMe2BjzlwCvxLAKPFU3tzqkiLGRkAOqS_y7Od9cQ2Gt-Rb0WLsWg926daucwWhTXq8gi0onEBz053toHSvnT";
+	
 
 	@Autowired
 	public AutomationRest(AutomationProperties automationProperties) {
@@ -38,7 +47,21 @@ public class AutomationRest {
 		String url = this.automationProperties.getNodePath() + "/temperature";
 		return makeGetRequest(url);
 	}
-
+	
+	@RequestMapping(method = RequestMethod.GET, value = "/humidity")
+	public String getHumidity() throws ClientProtocolException, IOException {
+		String url = this.automationProperties.getNodePath() + "/humidity";
+		return makeGetRequest(url);
+	}
+	
+	@RequestMapping(method = RequestMethod.GET, value = "/rain")
+	public String getRainValue() throws ClientProtocolException, IOException {
+		String url = this.automationProperties.getNodePath() + "/rain";
+		return makeGetRequest(url);
+		
+	}
+	
+	
 	// is possible to control 3 lights
 	@RequestMapping(method = RequestMethod.POST, value = "/light")
 	public String changeLight(@RequestParam(value = "id") String id, @RequestParam(value = "value") String value)
@@ -100,6 +123,51 @@ public class AutomationRest {
 		String url = this.automationProperties.getNodePath() + "/changeServo/" + this.automationProperties.getDoorPin(id);
 
 		return this.makePostRequest(url);
+
+	}
+	
+	@RequestMapping(method = RequestMethod.POST, value = "/setToken")
+	public void setToken(@RequestParam(value = "token") String token){
+	
+		this.userToken = token;	
+		
+	}
+	
+	
+	@RequestMapping(method = RequestMethod.POST, value = "/notification")
+	public void notifications(@RequestBody Map<String,String> bodyValue) throws JSONException {
+		
+		System.out.println("Notificação recebida");
+		System.out.println("Body message: ");
+		System.out.println(bodyValue);
+		
+		String messageString = bodyValue.get("message");
+		
+		JSONObject message = new JSONObject();
+		message.put("title", "Alerta");
+	    message.put("message", messageString);
+	    JSONObject protocol = new JSONObject();
+	    protocol.put("to", this.userToken);
+	    protocol.put("data", message);
+	    
+		
+		 try {
+		        HttpClient httpClient = HttpClientBuilder.create().build();
+
+		        HttpPost request = new HttpPost("https://fcm.googleapis.com/fcm/send");
+		        request.addHeader("content-type", "application/json");
+		        request.addHeader("Authorization", "key=" + this.automationProperties.getServerKey());
+		        
+		        StringEntity paramsEntity = new StringEntity(protocol.toString());
+		        request.setEntity(paramsEntity);
+		        System.out.println(paramsEntity);
+
+		        HttpResponse response = httpClient.execute(request);
+		        System.out.println(response.toString());
+		    } catch (Exception e) {
+		    }
+		 
+		
 
 	}
 	

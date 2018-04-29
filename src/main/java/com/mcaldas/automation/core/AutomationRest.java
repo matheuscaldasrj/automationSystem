@@ -34,9 +34,11 @@ import com.mcaldas.automation.exceptions.CommandInvalidException;
 public class AutomationRest {
 
 	private AutomationProperties automationProperties;
-	private String userToken = "dbk-9Ziem54:APA91bH6hIRX7LLElg3lyHOYp7NVRXDUnkSxYibsOm0W37PW7TEJ_0W1DMe2BjzlwCvxLAKPFU3tzqkiLGRkAOqS_y7Od9cQ2Gt-Rb0WLsWg926daucwWhTXq8gi0onEBz053toHSvnT";
+	private String userToken = "dbk-9Ziem54:APA91bF5jn6LLAahm_F-L8wJ1dLOt80ViF7WzO3uicbYG7ntNgXyo1s716J_f2ALqedJM7SHGttf3Ro40B2Pzwhv9l4nb5AePaaWwsAuruz6QjC5bayOla9rk5PsRVT8sGQCNW3WQLYt";
+	private String masterPass;
+	private Map<String,JSONObject> currentAlerts = new HashMap<String,JSONObject>();
 	
-
+	
 	@Autowired
 	public AutomationRest(AutomationProperties automationProperties) {
 		this.automationProperties = automationProperties;
@@ -58,6 +60,12 @@ public class AutomationRest {
 	public String getRainValue() throws ClientProtocolException, IOException {
 		String url = this.automationProperties.getNodePath() + "/rain";
 		return makeGetRequest(url);
+		
+	}
+	
+	@RequestMapping(method = RequestMethod.GET, value = "/alerts")
+	public Object[] getAlerts() throws ClientProtocolException, IOException {
+		return currentAlerts.keySet().toArray();
 		
 	}
 	
@@ -116,11 +124,26 @@ public class AutomationRest {
 	
 	
 	@RequestMapping(method = RequestMethod.POST, value = "/door")
-	public String changeDoorState(@RequestParam(value = "id") String id)
+	public String changeDoorState(@RequestParam(value = "id") String id, @RequestParam(value = "password") String password)
 			throws Exception {
+		
+		System.out.println("Teste da porta");
+		String url;
+		
+		if(password.equals("null")) {
+			url = this.automationProperties.getNodePath() + "/changeServo/" + this.automationProperties.getDoorPin(id);
+			return this.makePostRequest(url);
+		}
+		
+		if(masterPass == null) {
+			masterPass = this.automationProperties.getMasterPass();
+		}
+		if(!password.equals(masterPass)) {
+			//bad password;
+			return null;
+		}
 
-
-		String url = this.automationProperties.getNodePath() + "/changeServo/" + this.automationProperties.getDoorPin(id);
+		url = this.automationProperties.getNodePath() + "/changeServo/" + this.automationProperties.getDoorPin(id);
 
 		return this.makePostRequest(url);
 
@@ -128,9 +151,7 @@ public class AutomationRest {
 	
 	@RequestMapping(method = RequestMethod.POST, value = "/setToken")
 	public void setToken(@RequestParam(value = "token") String token){
-	
 		this.userToken = token;	
-		
 	}
 	
 	
@@ -150,7 +171,12 @@ public class AutomationRest {
 	    protocol.put("to", this.userToken);
 	    protocol.put("data", message);
 	    
-		
+	    if(currentAlerts.get(messageString) == null) {	    	
+	    	currentAlerts.put(messageString, message);
+	    } else {
+	    	System.out.println("Alerta não enviado pois já estava na lista de alertas!!");
+	    	return ;
+	    }
 		 try {
 		        HttpClient httpClient = HttpClientBuilder.create().build();
 
@@ -171,6 +197,12 @@ public class AutomationRest {
 
 	}
 	
+	@RequestMapping(method = RequestMethod.POST, value = "/deleteAlert")
+	public Object[] deleteAlarm(@RequestParam(value = "alertMessage") String alertMessage) throws JSONException { 
+		System.out.println("Trying to remove alert: " + alertMessage);
+		currentAlerts.remove(alertMessage);
+		return currentAlerts.keySet().toArray();
+	}
 
 	private String makeGetRequest(String url) throws ClientProtocolException, IOException {
 		HttpClient client = HttpClientBuilder.create().build();

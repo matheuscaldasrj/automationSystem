@@ -24,7 +24,7 @@ public class AutomationProperties {
 	private String light3;
 	private String door1;
 	private String serverKey;
-	
+	private String masterPass;
 	
 	public String getConfigLightMapping() {
 		return configLightMapping;
@@ -90,6 +90,13 @@ public class AutomationProperties {
 		this.serverKey = serverKey;
 	}
 
+	
+	public String getMasterPass() {
+		return masterPass;
+	}
+	public void setMasterPass(String masterPass) {
+		this.masterPass = masterPass;
+	}
 	
 	
 	

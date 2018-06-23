@@ -34,7 +34,7 @@ import com.mcaldas.automation.exceptions.CommandInvalidException;
 public class AutomationRest {
 
 	private AutomationProperties automationProperties;
-	private String userToken = "dbk-9Ziem54:APA91bF5jn6LLAahm_F-L8wJ1dLOt80ViF7WzO3uicbYG7ntNgXyo1s716J_f2ALqedJM7SHGttf3Ro40B2Pzwhv9l4nb5AePaaWwsAuruz6QjC5bayOla9rk5PsRVT8sGQCNW3WQLYt";
+	private String userToken;
 	private String masterPass;
 	private Map<String,JSONObject> currentAlerts = new HashMap<String,JSONObject>();
 	
@@ -42,6 +42,7 @@ public class AutomationRest {
 	@Autowired
 	public AutomationRest(AutomationProperties automationProperties) {
 		this.automationProperties = automationProperties;
+		this.userToken = automationProperties.getUserToken();
 	}
 
 	@RequestMapping(method = RequestMethod.GET, value = "/temperature")
@@ -164,15 +165,21 @@ public class AutomationRest {
 		
 		String messageString = bodyValue.get("message");
 		
-		JSONObject message = new JSONObject();
-		message.put("title", "Alerta");
-	    message.put("message", messageString);
+		JSONObject notification = new JSONObject();
+		notification.put("title", "Alerta");
+		notification.put("body", messageString);
+	    
+		JSONObject data = new JSONObject();
+		data.put("message", messageString);
+		
+		
 	    JSONObject protocol = new JSONObject();
+	    protocol.put("notification", notification);
+	    protocol.put("data", data);
 	    protocol.put("to", this.userToken);
-	    protocol.put("data", message);
 	    
 	    if(currentAlerts.get(messageString) == null) {	    	
-	    	currentAlerts.put(messageString, message);
+	    	currentAlerts.put(messageString, notification);
 	    } else {
 	    	System.out.println("Alerta não enviado pois já estava na lista de alertas!!");
 	    	return ;
@@ -198,9 +205,14 @@ public class AutomationRest {
 	}
 	
 	@RequestMapping(method = RequestMethod.POST, value = "/deleteAlert")
-	public Object[] deleteAlarm(@RequestParam(value = "alertMessage") String alertMessage) throws JSONException { 
+	public Object[] deleteAlarm(@RequestParam(value = "alertMessage") String alertMessage) throws Exception { 
 		System.out.println("Trying to remove alert: " + alertMessage);
 		currentAlerts.remove(alertMessage);
+		if(alertMessage.equals("Alerta de vibracao")) {
+			//in case of delete vibration, stop sound
+			String url =  this.automationProperties.getNodePath() + "/stopSound";
+			makePostRequest(url);
+		}
 		return currentAlerts.keySet().toArray();
 	}
 
